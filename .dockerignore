@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.env.*
+node_modules
+_build
+deps
+*.log
+.DS_Store
+*.swp
+*.swo
+*~
+

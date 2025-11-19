@@ -1,0 +1,36 @@
+{
+  "name": "elixir-phoenix-igniter-devcontainer",
+  "dockerComposeFile": "./docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "hverlin.mise-vscode",
+        "elixir-lsp.elixir-ls",
+        "ketupia.ash-studio-vscode-extension",
+        "bradlc.vscode-tailwindcss",
+        "phoenixframework.phoenix"
+      ],
+      "settings": {
+        "elixirLS.fetchDeps": true,
+        "elixirLS.dialyzerEnabled": true,
+        "files.watcherExclude": {
+          "**/_build/**": true,
+          "**/deps/**": true
+        }
+      }
+    }
+  },
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // This can be used to network with other containers or with the host.
+  "forwardPorts": [
+    "4000:4000",
+    "4001:4001"
+  ],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // Since our deps may change regularly, we'll do this outside the Dockerfile caching
+  // Install mise tools for the workspace mise.toml (workspace is mounted at /app)
+  "postCreateCommand": ".devcontainer/post_create.sh",
+  "remoteUser": "vscode"
+}

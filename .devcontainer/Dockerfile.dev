@@ -1,0 +1,117 @@
+FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
+
+# these environment variables are used to determine if the code is running in a docker container or a devcontainer
+# This may be useful for configuring some tools to behave differently in each environment (e.g. Chromium)
+ENV IN_DOCKER=true
+ENV IN_DEVCONTAINER=true
+
+# Set locale to UTF-8 to fix Elixir warnings (base image uses POSIX locale)
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+RUN apt-get -q -y update && \
+  apt-get -q -y --no-install-recommends install \
+  # Essential for Phoenix/Elixir development
+  libpq-dev \
+  postgresql-client \
+  inotify-tools \
+  libffi-dev \
+  libyaml-dev \
+  python3 \
+  file \
+  libreadline-dev \
+  direnv \
+  # Likely needed for various Elixir libraries
+  libsqlite3-dev \
+  libxml2-dev \
+  libxslt-dev \
+  libtool \
+  libncurses-dev \
+  # Build tools (uncomment if building from source)
+  # autoconf \
+  # automake \
+  # Image processing libraries (uncomment if needed)
+  # imagemagick \
+  # libmagickcore-dev \
+  # libmagickwand-dev \
+  # libjpeg-dev \
+  # libpng-dev \
+  # libwebp-dev \
+  # Compression libraries (uncomment if needed)
+  # libbz2-dev \
+  # liblzma-dev \
+  # Additional database libraries (uncomment if needed)
+  # libdb-dev \
+  # libmaxminddb-dev \
+  # unixodbc-dev \
+  # Network/protocol libraries (uncomment if needed)
+  # libevent-dev \
+  # libsctp-dev \
+  # System libraries (uncomment if needed)
+  # libgdbm-dev \
+  # libglib2.0-dev \
+  # libgmp-dev \
+  # libkrb5-dev \
+  # libncurses5-dev \
+  # libncursesw5-dev \
+  # Version control (uncomment if needed)
+  # mercurial \
+  # Editors (vim-tiny is already installed)
+  # vim \
+  # neovim \
+  # GUI/Display libraries for headless browser testing (uncomment if using Wallaby/Hound)
+  # libnspr4 \
+  # libnss3 \
+  # libdbus-1-3 \
+  # libatk1.0-0 \
+  # libatk-bridge2.0-0 \
+  # libcups2 \
+  # libxkbcommon0 \
+  # libatspi2.0-0 \
+  # libxcomposite1 \
+  # libxdamage1 \
+  # libxfixes3 \
+  # libxrandr2 \
+  # libgbm1 \
+  # libasound2
+  && apt-get -q -y clean
+
+# Install mise using the official installer script (system-wide)
+RUN curl https://mise.run | MISE_INSTALL_PATH=/usr/local/bin/mise sh
+
+# Set up shell choice and default shell
+ARG SHELL_CHOICE=""
+
+# Set default shell for vscode user based on SHELL_CHOICE
+# Default to zsh if not specified or invalid
+RUN if [ "$SHELL_CHOICE" = "bash" ]; then \
+      usermod -s /bin/bash vscode; \
+    else \
+      usermod -s /bin/zsh vscode; \
+    fi
+
+# Switch to vscode user for user-specific configuration
+USER vscode
+
+# Configure git to trust the workspace directory
+RUN git config --global --add safe.directory /app
+
+# Set up the editor
+ARG EDITOR=""
+RUN if [ -n "$EDITOR" ]; then \
+      echo "export EDITOR=\"$EDITOR\"" >> ~/.bashrc && \
+      echo "export EDITOR=\"$EDITOR\"" >> ~/.zshrc; \
+    else \
+      echo "export EDITOR=\"nano\"" >> ~/.bashrc && \
+      echo "export EDITOR=\"nano\"" >> ~/.zshrc; \
+    fi
+
+# Set up direnv hook for automatic environment variable loading
+RUN echo '\neval "$(direnv hook zsh)"' >> ~/.zshrc && \
+    echo '\neval "$(direnv hook bash)"' >> ~/.bashrc
+
+# Set up mise activation for vscode user (bash and zsh)
+RUN echo '\neval "$(mise activate bash)"' >> ~/.bashrc && \
+    echo '\neval "$(mise activate zsh)"' >> ~/.zshrc
